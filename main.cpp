@@ -83,7 +83,7 @@ int getInt(string name,char *v) {
 
   } catch(std::invalid_argument&) {
 
-    printf("[ERROR] Invalid %s argument, number expected\n",name.c_str());
+    fprintf(stderr,"[ERROR] Invalid %s argument, number expected\n",name.c_str());
     exit(-1);
 
   }
@@ -113,7 +113,7 @@ void getInts(string name,vector<int> &tokens, const string &text, char sep) {
 
   } catch(std::invalid_argument &) {
 
-    printf("[ERROR] Invalid %s argument, number expected\n",name.c_str());
+    fprintf(stderr,"[ERROR] Invalid %s argument, number expected\n",name.c_str());
     exit(-1);
 
   }
@@ -141,7 +141,7 @@ void getKeySpace( const string &text, BITCRACK_PARAM * bc, Int& maxKey) {
 			bc->ksStart.SetInt32(1);
 		}
 		else if (item.length() > 64) {
-			printf("[ERROR] keyspaceSTART: invalid privkey (64 length)\n");
+			fprintf(stderr,"[ERROR] keyspaceSTART: invalid privkey (64 length)\n");
 			exit(-1);
 		}
 		else{
@@ -156,7 +156,7 @@ void getKeySpace( const string &text, BITCRACK_PARAM * bc, Int& maxKey) {
 		if (start != 0 && (end = text.find('+', start)) != string::npos) {
 			item = std::string(text.substr(end + 1));
 			if (item.length() > 64 || item.length() == 0) {
-				printf("[ERROR] keyspace__END: invalid privkey (64 length)\n");
+				fprintf(stderr,"[ERROR] keyspace__END: invalid privkey (64 length)\n");
 				exit(-1);
 			}
 			item.insert(0, 64 - item.length(), '0');
@@ -170,7 +170,7 @@ void getKeySpace( const string &text, BITCRACK_PARAM * bc, Int& maxKey) {
 		else if (start != 0) {
 			item = std::string(text.substr(start));
 			if (item.length() > 64 || item.length() == 0) {
-				printf("[ERROR] keyspace__END: invalid privkey (64 length)\n");
+				fprintf(stderr,"[ERROR] keyspace__END: invalid privkey (64 length)\n");
 				exit(-1);
 			}
 			item.insert(0, 64 - item.length(), '0');
@@ -187,7 +187,7 @@ void getKeySpace( const string &text, BITCRACK_PARAM * bc, Int& maxKey) {
 	}
 	catch (std::invalid_argument &) {
 
-		printf("[ERROR] Invalid --keyspace argument \n");
+		fprintf(stderr,"[ERROR] Invalid --keyspace argument \n");
 		exit(-1);
 
 	}
@@ -198,15 +198,15 @@ void getKeySpace( const string &text, BITCRACK_PARAM * bc, Int& maxKey) {
 void checkKeySpace(BITCRACK_PARAM * bc, Int& maxKey) {
 
 	if (bc->ksStart.IsGreater(&maxKey) || bc->ksFinish.IsGreater(&maxKey)) {
-		printf("[ERROR] START/END IsGreater %064s \n", maxKey.GetBase16().c_str());
+		fprintf(stderr,"[ERROR] START/END IsGreater %064s \n", maxKey.GetBase16().c_str());
 		exit(-1);
 	}
 	if (bc->ksFinish.IsLowerOrEqual(&bc->ksStart)) {
-		printf("[ERROR] END IsLowerOrEqual START \n");
+		fprintf(stderr,"[ERROR] END IsLowerOrEqual START \n");
 		exit(-1);
 	}
 	if (bc->ksFinish.IsLowerOrEqual(&bc->ksNext)) {
-		printf("[ERROR] END: IsLowerOrEqual NEXT \n");
+		fprintf(stderr,"[ERROR] END: IsLowerOrEqual NEXT \n");
 		exit(-1);
 	}
 
@@ -227,18 +227,18 @@ void getShare(const string &text, int *shareM, int *shareN) {
 			*shareN = std::stoi(text.substr(start));
 		}
 		else {
-			printf("[ERROR] Invalid --share M/N argument \n");
+			fprintf(stderr,"[ERROR] Invalid --share M/N argument \n");
 			exit(-1);
 		}
 		if(*shareM <= 0 || *shareN <= 0 || *shareM > *shareN ) {
-			printf("[ERROR] Invalid --share argument, need M<=N and M>0 and N>0 \n");
+			fprintf(stderr, "[ERROR] Invalid --share argument, need M<=N and M>0 and N>0 \n");
 			exit(-1);
 		}
 
 	}
 	catch (std::invalid_argument &) {
 
-		printf("[ERROR] Invalid --share argument \n");
+		fprintf(stderr, "[ERROR] Invalid --share argument \n");
 		exit(-1);
 
 	}
@@ -253,7 +253,7 @@ void loadProgress(string fileName, BITCRACK_PARAM * bc) {
 		FILE *fp;
 		fp = fopen(fileName.c_str(), "r");
 		if (fp != NULL) {
-			printf("[load] from sessfile '%s' \n", fileName.c_str());
+			fprintf(stderr, "[load] from sessfile '%s' \n", fileName.c_str());
 
 			char f_buf[100];
 			string f_str;
@@ -276,9 +276,9 @@ void loadProgress(string fileName, BITCRACK_PARAM * bc) {
 					}
 				}
 			}
-			printf("[load] start=%064s \n", bc->ksStart.GetBase16().c_str());
-			printf("[load]  next=%064s \n", bc->ksNext.GetBase16().c_str());
-			printf("[load]   end=%064s \n", bc->ksFinish.GetBase16().c_str());
+			fprintf(stderr, "[load] start=%064s \n", bc->ksStart.GetBase16().c_str());
+			fprintf(stderr, "[load]  next=%064s \n", bc->ksNext.GetBase16().c_str());
+			fprintf(stderr, "[load]   end=%064s \n", bc->ksFinish.GetBase16().c_str());
 			fclose(fp);
 		}
 	}
@@ -291,7 +291,7 @@ void parseFile(string fileName, vector<string> &lines) {
   // Get file size
   FILE *fp = fopen(fileName.c_str(), "rb");
   if (fp == NULL) {
-    printf("[ERROR] ParseFile: cannot open %s %s\n", fileName.c_str(), strerror(errno));
+    fprintf(stderr, "[ERROR] ParseFile: cannot open %s %s\n", fileName.c_str(), strerror(errno));
     exit(-1);
   }
   fseek(fp, 0L, SEEK_END);
@@ -319,14 +319,14 @@ void parseFile(string fileName, vector<string> &lines) {
       nbLine++;
       if (loaddingProgress) {
         if ((nbLine % 50000) == 0)
-          printf("[Loading input file %5.1f%%]\r", ((double)nbLine*100.0) / ((double)(nbAddr)*33.0 / 34.0));
+          fprintf(stderr, "[Loading input file %5.1f%%]\r", ((double)nbLine*100.0) / ((double)(nbAddr)*33.0 / 34.0));
       }
     }
 
   }
 
   if (loaddingProgress)
-    printf("[Loading input file 100.0%%]\n");
+    fprintf(stderr, "[Loading input file 100.0%%]\n");
 
 }
 // ------------------------------------------------------------------------------------------
@@ -334,8 +334,8 @@ void parseFile(string fileName, vector<string> &lines) {
 void generateKeyPair(Secp256K1 *secp, string seed, int searchMode,bool paranoiacSeed) {
 
   if (seed.length() < 8) {
-    printf("[ERROR] Use a seed of at leats 8 characters to generate a key pair\n");
-    printf("Ex: VanitySearch -s \"A Strong Password\" -kp\n");
+    fprintf(stderr, "[ERROR] Use a seed of at leats 8 characters to generate a key pair\n");
+    fprintf(stderr, "Ex: VanitySearch -s \"A Strong Password\" -kp\n");
     exit(-1);
   }
 
@@ -343,7 +343,7 @@ void generateKeyPair(Secp256K1 *secp, string seed, int searchMode,bool paranoiac
     seed = seed + Timer::getSeed(32);
 
   if (searchMode == SEARCH_BOTH) {
-    printf("[ERROR] Use compressed or uncompressed to generate a key pair\n");
+    fprintf(stderr, "[ERROR] Use compressed or uncompressed to generate a key pair\n");
     exit(-1);
   }
 
@@ -359,8 +359,8 @@ void generateKeyPair(Secp256K1 *secp, string seed, int searchMode,bool paranoiac
   privKey.SetInt32(0);
   sha256(hseed, 64, (unsigned char *)privKey.bits64);
   Point p = secp->ComputePublicKey(&privKey);
-  printf("Priv : %s\n", secp->GetPrivAddress(compressed,privKey).c_str());
-  printf("Pub  : %s\n", secp->GetPublicKeyHex(compressed,p).c_str());
+  fprintf(stderr, "Priv : %s\n", secp->GetPrivAddress(compressed,privKey).c_str());
+  fprintf(stderr, "Pub  : %s\n", secp->GetPublicKeyHex(compressed,p).c_str());
 
 }
 
@@ -381,21 +381,21 @@ void outputAdd(string outputFile, int addrType, string addr, string pAddr, strin
     }
   }
 
-  fprintf(f, "\nPub Addr: %s\n", addr.c_str());
+  fprintf(stderr, "\nPublic Addr: %s\n", addr.c_str());
 
 
   switch (addrType) {
   case P2PKH:
-    fprintf(f, "Priv (WIF): p2pkh:%s\n", pAddr.c_str());
+    fprintf(stderr, "Priv (WIF): p2pkh:%s\n", pAddr.c_str());
     break;
   case P2SH:
-    fprintf(f, "Priv (WIF): p2wpkh-p2sh:%s\n", pAddr.c_str());
+    fprintf(stderr, "Priv (WIF): p2wpkh-p2sh:%s\n", pAddr.c_str());
     break;
   case BECH32:
-    fprintf(f, "Priv (WIF): p2wpkh:%s\n", pAddr.c_str());
+    fprintf(stderr, "Priv (WIF): p2wpkh:%s\n", pAddr.c_str());
     break;
   }
-  fprintf(f, "Priv (HEX): 0x%064s\n", pAddrHex.c_str());
+  fprintf(stderr, "Priv (HEX): 0x%064s\n", pAddrHex.c_str());
 
   if (needToClose)
     fclose(f);
@@ -727,7 +727,7 @@ int main(int argc, char* argv[]) {
       for(int i=0;i<gpuId.size();i++)
         gridSize.push_back(-1);
     } else {
-      printf("Invalid gridSize or gpuId argument, must have same size\n");
+      fprintf(stderr,"Invalid gridSize or gpuId argument, must have same size\n");
       printUsage();
     }
   }
@@ -771,7 +771,7 @@ int main(int argc, char* argv[]) {
 
 	  bc->ksNext.Set(&bc->ksStart);
 
-	  printf("[share] %i/%i \n", bc->shareM, bc->shareN);
+	  fprintf(stderr,"[share] %i/%i \n", bc->shareM, bc->shareN);
 
   }
 
@@ -780,8 +780,8 @@ int main(int argc, char* argv[]) {
   loadProgress(sessFile, bc);
   checkKeySpace(bc, maxKey);
 
-  printf("[keyspace] start=%064s\n", bc->ksStart.GetBase16().c_str());
-  printf("[keyspace]   end=%064s\n", bc->ksFinish.GetBase16().c_str());
+  fprintf(stderr,"[keyspace] start=%064s\n", bc->ksStart.GetBase16().c_str());
+  fprintf(stderr,"[keyspace]   end=%064s\n", bc->ksFinish.GetBase16().c_str());
 
 
   VanitySearch *v = new VanitySearch(secp, prefix, seed, searchMode, gpuEnable, stop, outputFile, sse,
