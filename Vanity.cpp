@@ -27,6 +27,7 @@
 #include <string.h>
 #include <math.h>
 #include <algorithm>
+#include <iostream>
 #ifndef WIN64
 #include <pthread.h>
 #endif
@@ -84,7 +85,7 @@ VanitySearch::VanitySearch(Secp256K1 *secp, vector<std::string> &inputPrefixes,s
     // Insert prefixes
     bool loadingProgress = (inputPrefixes.size() > 1000);
     if (loadingProgress)
-      printf("[Building lookup16   0.0%%]\r");
+      fprintf(stderr,"[Building lookup16   0.0%%]\r");
 
     nbPrefix = 0;
     onlyFull = true;
@@ -171,7 +172,7 @@ VanitySearch::VanitySearch(Secp256K1 *secp, vector<std::string> &inputPrefixes,s
       }
 
       if (loadingProgress && i % 1000 == 0)
-        printf("[Building lookup16 %5.1f%%]\r", (((double)i) / (double)(inputPrefixes.size() - 1)) * 100.0);
+        fprintf(stderr,"[Building lookup16 %5.1f%%]\r", (((double)i) / (double)(inputPrefixes.size() - 1)) * 100.0);
     }
 
     if (loadingProgress)
@@ -179,12 +180,12 @@ VanitySearch::VanitySearch(Secp256K1 *secp, vector<std::string> &inputPrefixes,s
 
 
     if (!caseSensitive && searchType == BECH32) {
-      printf("[ERROR] case unsensitive search with BECH32 not allowed.\n");
+      fprintf(stderr,"[ERROR] case unsensitive search with BECH32 not allowed.\n");
       exit(-1);
     }
 
     if (nbPrefix == 0) {
-      printf("[ERROR] VanitySearch: nothing to search !\n");
+      fprintf(stderr,"[ERROR] VanitySearch: nothing to search !\n");
       exit(-1);
     }
 
@@ -208,7 +209,7 @@ VanitySearch::VanitySearch(Secp256K1 *secp, vector<std::string> &inputPrefixes,s
         unique_sPrefix++;
       }
       if (loadingProgress)
-        printf("[Building lookup32 %.1f%%]\r", ((double)i*100.0) / (double)prefixes.size());
+        fprintf(stderr,"[Building lookup32 %.1f%%]\r", ((double)i*100.0) / (double)prefixes.size());
     }
 
     if (loadingProgress)
@@ -219,17 +220,17 @@ VanitySearch::VanitySearch(Secp256K1 *secp, vector<std::string> &inputPrefixes,s
     if (nbPrefix == 1) {
       if (!caseSensitive) {
         // Case unsensitive search
-        printf("Difficulty: %.0f\n", _difficulty);
-        printf("Search: %s [%s, Case unsensitive] (Lookup size %d)\n", inputPrefixes[0].c_str(), seachInfo.c_str(), unique_sPrefix);
+        fprintf(stderr,"Difficulty: %.0f\n", _difficulty);
+        fprintf(stderr,"Search: %s [%s, Case unsensitive] (Lookup size %d)\n", inputPrefixes[0].c_str(), seachInfo.c_str(), unique_sPrefix);
       } else {
-        printf("Difficulty: %.0f\n", _difficulty);
-        printf("Search: %s [%s]\n", inputPrefixes[0].c_str(), seachInfo.c_str());
+        fprintf(stderr,"Difficulty: %.0f\n", _difficulty);
+        fprintf(stderr,"Search: %s [%s]\n", inputPrefixes[0].c_str(), seachInfo.c_str());
       }
     } else {
       if (onlyFull) {
-        printf("Search: %d addresses (Lookup size %d,[%d,%d]) [%s]\n", nbPrefix, unique_sPrefix, minI, maxI, seachInfo.c_str());
+        fprintf(stderr,"Search: %d addresses (Lookup size %d,[%d,%d]) [%s]\n", nbPrefix, unique_sPrefix, minI, maxI, seachInfo.c_str());
       } else {
-        printf("Search: %d prefixes (Lookup size %d) [%s]\n", nbPrefix, unique_sPrefix, seachInfo.c_str());
+        fprintf(stderr,"Search: %d prefixes (Lookup size %d) [%s]\n", nbPrefix, unique_sPrefix, seachInfo.c_str());
       }
     }
 
@@ -250,16 +251,16 @@ VanitySearch::VanitySearch(Secp256K1 *secp, vector<std::string> &inputPrefixes,s
       break;
 
     default:
-      printf("[ERROR] Invalid start character 1,3 or b, expected");
+      fprintf(stderr,"[ERROR] Invalid start character 1,3 or b, expected");
       exit(-1);
 
     }
 
     string searchInfo = string(searchModes[searchMode]) + (startPubKeySpecified ? ", with public key" : "");
     if (inputPrefixes.size() == 1) {
-      printf("Search: %s [%s]\n", inputPrefixes[0].c_str(), searchInfo.c_str());
+      fprintf(stderr,"Search: %s [%s]\n", inputPrefixes[0].c_str(), searchInfo.c_str());
     } else {
-      printf("Search: %d patterns [%s]\n", (int)inputPrefixes.size(), searchInfo.c_str());
+      fprintf(stderr,"Search: %d patterns [%s]\n", (int)inputPrefixes.size(), searchInfo.c_str());
     }
 
     patternFound = (bool *)malloc(inputPrefixes.size()*sizeof(bool));
@@ -312,7 +313,7 @@ VanitySearch::VanitySearch(Secp256K1 *secp, vector<std::string> &inputPrefixes,s
   // set startKey from seed
   if (0) {
 	  if (seed.length() > 64 || seed.length() == 0) {
-		  printf("[ERROR] StartKey: invalid privkey (64 length)\n");
+		  fprintf(stderr,"[ERROR] StartKey: invalid privkey (64 length)\n");
 		  exit(-1);
 	  }
 	  seed.insert(0, 64 - seed.length(), '0');
@@ -331,10 +332,10 @@ VanitySearch::VanitySearch(Secp256K1 *secp, vector<std::string> &inputPrefixes,s
   char *ctimeBuff;
   time_t now = time(NULL);
   ctimeBuff = ctime(&now);
-  printf("Current task START time: %s", ctimeBuff);
+  fprintf(stderr,"Current task START time: %s", ctimeBuff);
 
   if (sessFile.length() > 0) {
-	  printf("Save progress to '%s' every 60sec and +%.0f Mkeys\n", sessFile.c_str(), (double)rekey);
+	  fprintf(stderr,"Save progress to '%s' every 60sec and +%.0f Mkeys\n", sessFile.c_str(), (double)rekey);
   }
 
 }
@@ -800,33 +801,33 @@ void VanitySearch::output(string addr,string pAddr,string pAddrHex) {
   if (outputFile.length() > 0) {
     f = fopen(outputFile.c_str(), "a");
     if (f == NULL) {
-      printf("Cannot open %s for writing\n", outputFile.c_str());
+      fprintf(stderr,"Cannot open %s for writing\n", outputFile.c_str());
       f = stdout;
     } else {
       needToClose = true;
     }
   }
 
-  fprintf(f, "\nPub Addr: %s\n", addr.c_str());
+  fprintf(stderr, "\nPublic Addr: %s\n", addr.c_str());
 
   if (startPubKeySpecified) {
 
-    fprintf(f, "PartialPriv: %s\n", pAddr.c_str());
+    fprintf(stderr, "PartialPriv: %s\n", pAddr.c_str());
 
   } else {
 
     switch (searchType) {
     case P2PKH:
-      fprintf(f, "Priv (WIF): p2pkh:%s\n", pAddr.c_str());
+      fprintf(stderr, "Priv (WIF): p2pkh:%s\n", pAddr.c_str());
       break;
     case P2SH:
-      fprintf(f, "Priv (WIF): p2wpkh-p2sh:%s\n", pAddr.c_str());
+      fprintf(stderr, "Priv (WIF): p2wpkh-p2sh:%s\n", pAddr.c_str());
       break;
     case BECH32:
-      fprintf(f, "Priv (WIF): p2wpkh:%s\n", pAddr.c_str());
+      fprintf(stderr, "Priv (WIF): p2wpkh:%s\n", pAddr.c_str());
       break;
     }
-    fprintf(f, "Priv (HEX): 0x%064s\n", pAddrHex.c_str());
+    fprintf(stderr, "Priv (HEX): 0x%064s\n", pAddrHex.c_str());
 
   }
 
@@ -929,10 +930,10 @@ bool VanitySearch::checkPrivKey(string addr, Int &key, int32_t incr, int endomor
     }
     string chkAddr = secp->GetAddress(searchType, mode, p);
     if (chkAddr != addr) {
-      printf("\nWarning, wrong private key generated !\n");
-      printf("  Addr :%s\n", addr.c_str());
-      printf("  Check:%s\n", chkAddr.c_str());
-      printf("  Endo:%d incr:%d comp:%d\n", endomorphism, incr, mode);
+      fprintf(stderr,"\nWarning, wrong private key generated !\n");
+      fprintf(stderr,"  Addr :%s\n", addr.c_str());
+      fprintf(stderr,"  Check:%s\n", chkAddr.c_str());
+      fprintf(stderr,"  Endo:%d incr:%d comp:%d\n", endomorphism, incr, mode);
       return false;
     }
 
@@ -1676,7 +1677,7 @@ void VanitySearch::FindKeyGPU(TH_PARAM *ph) {
   Int *keys = new Int[nbThread];
   vector<ITEM> found;
 
-  printf("GPU: %s\n",g.deviceName.c_str());
+  fprintf(stderr,"GPU: %s\n",g.deviceName.c_str());
 
   counters[thId] = 0;
   task_counters[thId] = 0;
@@ -1954,7 +1955,7 @@ void VanitySearch::Search(int nbThread,std::vector<int> gpuId,std::vector<int> g
     avgGpuKeyRate /= (double)(nbSample);
 
     if (isAlive(params)) {
-      printf("%.2f MK/s (GPU %.2f MK/s) (2^%.2f) %s[%d]  \r",
+      fprintf(stderr,"%.2f MK/s (GPU %.2f MK/s) (2^%.2f) %s[%d]  \r",
         avgKeyRate / 1000000.0, avgGpuKeyRate / 1000000.0,
           log2((double)count),
 		  GetExpectedTimeBitCrack(avgKeyRate, (double)count, bc).c_str(),
@@ -1978,7 +1979,7 @@ void VanitySearch::Search(int nbThread,std::vector<int> gpuId,std::vector<int> g
 		// Reached end of keyspace
 		if (lastSaveKey.IsGreaterOrEqual(&bc->ksFinish)) {
 			endOfSearch = true;
-			printf("[EXIT] Range research completed \n");
+			fprintf(stderr,"[EXIT] Range research completed \n");
 		}
 
 		timeout60sec = 0.0;
@@ -1996,7 +1997,7 @@ void VanitySearch::Search(int nbThread,std::vector<int> gpuId,std::vector<int> g
   char *ctimeBuff;
   time_t now = time(NULL);
   ctimeBuff = ctime(&now);
-  printf("Current task END time: %s", ctimeBuff);
+  fprintf(stderr,"Current task END time: %s", ctimeBuff);
 }
 
 // ----------------------------------------------------------------------------
